@@ -1,18 +1,26 @@
+import logging
+import os
 import cv2
 import pytesseract
 import numpy as np
 import re
 from aiogram import Bot, Dispatcher, executor, types
 
+logging.basicConfig(level=logging.INFO)
+
 pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
 
-TOKEN = 8293737352:AAHCqqeZvAA6r2uZeiEMzUKYRgFSPspEbjI
+TOKEN = os.getenv("BOT_TOKEN")
+
+if not TOKEN:
+    raise RuntimeError("BOT_TOKEN is not set")
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
 
-@dp.message_handler(content_types=['photo'])
-async def handle_photo(message: types.Message):
+@dp.message_handler(commands=["start"])
+async def start_cmd(message: types.Message):
+    await message.reply("👋 Бот онлайн. Надішли скрін 📸")
     photo = message.photo[-1]
     file = await bot.get_file(photo.file_id)
     await bot.download_file(file.file_path, "image.jpg")
@@ -42,4 +50,4 @@ async def handle_photo(message: types.Message):
         await message.reply("❌ Сині цифри не знайдені")
 
 if __name__ == "__main__":
-    executor.start_polling(dp)
+    executor.start_polling(dp, skip_updates=True)
