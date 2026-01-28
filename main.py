@@ -23,6 +23,7 @@ async def handle_photo(message: types.Message):
     try:
         await message.reply("📸 Фото отримала, аналізую...")
 
+        # --- отримуємо file_id ---
         if message.photo:
             file_id = message.photo[-1].file_id
         elif (
@@ -43,9 +44,11 @@ async def handle_photo(message: types.Message):
             await message.reply("❌ Не вдалося зчитати зображення")
             return
 
+        # --- беремо ТІЛЬКИ праву колонку ---
         h, w, _ = img.shape
         crop = img[:, int(w * 0.65):w]
 
+        # --- підготовка для OCR ---
         gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
         gray = cv2.equalizeHist(gray)
         gray = cv2.threshold(
@@ -53,9 +56,21 @@ async def handle_photo(message: types.Message):
             cv2.THRESH_BINARY + cv2.THRESH_OTSU
         )[1]
 
-        text = pytesseract.image_to_string(gray, config='--psm 6 digits')
-        numbers = list(map(int, re.findall(r'\d+', text)))
+        # --- OCR: читаємо окремі рядки ---
+        text = pytesseract.image_to_string(
+            gray,
+            config='--psm 11 -c tessedit_char_whitelist=0123456789'
+        )
 
+        lines = text.splitlines()
+        numbers = []
+
+        for line in lines:
+            line = line.strip()
+            if line.isdigit():
+                numbers.append(int(line))
+
+        # --- якщо нічого не знайшли ---
         if not numbers:
             await message.reply(
                 "🤔 Я не знайшла сині цифри.\n"
@@ -63,6 +78,7 @@ async def handle_photo(message: types.Message):
             )
             return
 
+        # --- фінальна відповідь ---
         await message.reply(
             f"🔢 Знайдено: {numbers}\n"
             f"✅ СУМА: {sum(numbers)}"
