@@ -57,26 +57,33 @@ async def handle_photo(message: types.Message):
         )[1]
 
         # --- OCR: читаємо окремі рядки ---
-        text = pytesseract.image_to_string(
-            gray,
-            config='--psm 11 -c tessedit_char_whitelist=0123456789'
-        )
+        data = pytesseract.image_to_data(
+    gray,
+    output_type=pytesseract.Output.DICT,
+    config='--psm 11 -c tessedit_char_whitelist=0123456789'
+)
 
-        lines = text.splitlines()
-        numbers = []
+numbers = []
 
-        for line in lines:
-            line = line.strip()
+img_width = gray.shape[1]
 
-            # беремо тільки чисті числа
-            if not line.isdigit():
-                continue
+for i in range(len(data["text"])):
+    txt = data["text"][i].strip()
+    if not txt.isdigit():
+        continue
 
-            value = int(line)
+    value = int(txt)
 
-            # 🎯 subscriber count: 0–999
-            if 0 <= value <= 999:
-                numbers.append(value)
+    # subscriber count: 0–999
+    if not (0 <= value <= 999):
+        continue
+
+    x = data["left"][i]
+    w = data["width"][i]
+
+    # 🎯 беремо ТІЛЬКИ те, що майже максимально праворуч
+    if x + w >= img_width * 0.9:
+        numbers.append(value)
 
         # --- якщо нічого не знайшли ---
         if not numbers:
