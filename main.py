@@ -43,23 +43,20 @@ async def handle_photo(message: types.Message):
             await message.reply("❌ Не вдалося зчитати зображення")
             return
 
-        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        h, w, _ = img.shape
 
-# 🔵 синій + синьо-сірий (підігнано під твої скріни)
-lower_blue_gray = np.array([90, 15, 70])
-upper_blue_gray = np.array([135, 255, 200])
+# беремо ТІЛЬКИ праві ~30% картинки (де цифри)
+crop = img[:, int(w * 0.65):w]
 
-mask = cv2.inRange(hsv, lower_blue_gray, upper_blue_gray)
+gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
 
-# прибираємо шум
-kernel = np.ones((3, 3), np.uint8)
-mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-mask = cv2.morphologyEx(mask, cv2.MORPH_DILATE, kernel)
+# підсилюємо контраст для темно-синіх цифр
+gray = cv2.equalizeHist(gray)
 
-result = cv2.bitwise_and(img, img, mask=mask)
-
-gray = cv2.cvtColor(result, cv2.COLOR_BGR2GRAY)
-gray = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+gray = cv2.threshold(
+    gray, 0, 255,
+    cv2.THRESH_BINARY + cv2.THRESH_OTSU
+)[1]
 
 text = pytesseract.image_to_string(gray, config='--psm 6 digits')
 numbers = list(map(int, re.findall(r'\d+', text)))
