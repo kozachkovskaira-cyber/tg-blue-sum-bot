@@ -67,8 +67,16 @@ async def handle_photo(message: types.Message):
 
         for line in lines:
             line = line.strip()
-            if line.isdigit():
-                numbers.append(int(line))
+
+            # беремо тільки чисті числа
+            if not line.isdigit():
+                continue
+
+            value = int(line)
+
+            # 🎯 subscriber count: 0–999
+            if 0 <= value <= 999:
+                numbers.append(value)
 
         # --- якщо нічого не знайшли ---
         if not numbers:
