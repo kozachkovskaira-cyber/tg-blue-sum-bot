@@ -4,6 +4,8 @@ import numpy as np
 import re
 from aiogram import Bot, Dispatcher, executor, types
 
+pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
+
 TOKEN = "8293737352:AAHJOOdQV1TtrwTS4fR9HGrxWKgniksGzkA"
 
 bot = Bot(token=TOKEN)
