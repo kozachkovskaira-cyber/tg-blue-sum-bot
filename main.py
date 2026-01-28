@@ -44,22 +44,17 @@ async def handle_photo(message: types.Message):
             return
 
         h, w, _ = img.shape
+        crop = img[:, int(w * 0.65):w]
 
-# беремо ТІЛЬКИ праві ~30% картинки (де цифри)
-crop = img[:, int(w * 0.65):w]
+        gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+        gray = cv2.equalizeHist(gray)
+        gray = cv2.threshold(
+            gray, 0, 255,
+            cv2.THRESH_BINARY + cv2.THRESH_OTSU
+        )[1]
 
-gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
-
-# підсилюємо контраст для темно-синіх цифр
-gray = cv2.equalizeHist(gray)
-
-gray = cv2.threshold(
-    gray, 0, 255,
-    cv2.THRESH_BINARY + cv2.THRESH_OTSU
-)[1]
-
-text = pytesseract.image_to_string(gray, config='--psm 6 digits')
-numbers = list(map(int, re.findall(r'\d+', text)))
+        text = pytesseract.image_to_string(gray, config='--psm 6 digits')
+        numbers = list(map(int, re.findall(r'\d+', text)))
 
         if not numbers:
             await message.reply(
@@ -74,7 +69,8 @@ numbers = list(map(int, re.findall(r'\d+', text)))
         )
 
     except Exception as e:
-        await message.reply(f"⚠️ Помилка обробки фото:\n{e}")
+        await message.reply("⚠️ Помилка під час обробки фото.")
+        print(e)
 
 if __name__ == "__main__":
     executor.start_polling(dp, skip_updates=True)
