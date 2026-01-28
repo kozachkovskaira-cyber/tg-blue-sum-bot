@@ -6,7 +6,7 @@ from aiogram import Bot, Dispatcher, executor, types
 
 pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
 
-TOKEN = "8293737352:AAHJOOdQV1TtrwTS4fR9HGrxWKgniksGzkA"
+TOKEN = 8293737352:AAHCqqeZvAA6r2uZeiEMzUKYRgFSPspEbjI
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
